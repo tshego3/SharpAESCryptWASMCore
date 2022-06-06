@@ -11,6 +11,8 @@
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Build" Version="3.2.1" PrivateAssets="all" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="3.2.1" PrivateAssets="all" />
     <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="2.2.7" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.2.5" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Formatters.Json" Version="2.2.0" />
     <PackageReference Include="Microsoft.JSInterop" Version="3.1.25" />
     <PackageReference Include="Microsoft.JSInterop.WebAssembly" Version="3.2.1" />
     <PackageReference Include="Radzen.Blazor" Version="3.18.13" />

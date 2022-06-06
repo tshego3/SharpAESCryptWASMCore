@@ -1,7 +1,9 @@
 ﻿@page "/"
 @using System.Text
 @using System.IO
+@using Microsoft.AspNetCore.Components
 @using Microsoft.AspNetCore.Hosting
+@using Microsoft.AspNetCore.Http
 @using SharpAESCryptWASMCore.Shared
 
 @inject IJSRuntime JSRuntime
@@ -15,6 +17,9 @@
     <div class="col-md-4 p-3">
         <RadzenCard>
             <h4 class="mb-4">Select File</h4>
+
+            @*<input id="SelectedFile" type="file" />
+            <button onclick="PostFile()">submit</button>*@
             <RadzenFileInput @bind-Value=@fileBase64 TValue="string" Class="w-100" Change=@(args => RadzenFileInputOnChange(args, "FileInput")) Error=@(args => RadzenFileInputOnError(args, "FileInput")) />
             <h6 class="mb-4">File Name: <b>@(fileName)</b></h6>
         </RadzenCard>
@@ -87,7 +92,7 @@
         secretKey = value;
     }
 
-    private async Task<Stream> GetFileStream()
+    private async Task<MemoryStream> GetFileStream()
     {
         if (fileEncrypted == true)
         {
@@ -125,9 +130,19 @@
 
             var fileStream = await GetFileStream();
 
-            //using var streamRef = new DotNetStreamReference(stream: fileStream);
-
-            await JSRuntime.InvokeVoidAsync("downloadFileFromStream", getFileName, fileStream);
+            await JSRuntime.InvokeVoidAsync("downloadFileFromBase64", getFileName, Convert.ToBase64String(fileStream.ToArray()));
         }
     }
+
+    public class UploadFile
+    {
+        public IFormFile FormFile { get; set; }
+    }
+
+    //[Microsoft.AspNetCore.Mvc.HttpPost]
+    //[Route("/upload/file")]
+    //public Microsoft.AspNetCore.Mvc.JsonResult Update_Data(UploadFile uploadFile)
+    //{
+    //    return new Microsoft.AspNetCore.Mvc.JsonResult("s");
+    //}
 }
