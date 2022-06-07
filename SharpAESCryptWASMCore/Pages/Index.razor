@@ -4,29 +4,25 @@
 @using Microsoft.AspNetCore.Components
 @using Microsoft.AspNetCore.Hosting
 @using Microsoft.AspNetCore.Http
+@using Microsoft.AspNetCore.Mvc
 @using SharpAESCryptWASMCore.Shared
+@using System.ComponentModel.DataAnnotations
 
 @inject IJSRuntime JSRuntime
 @inject NotificationService NotificationService
 
-<PageTitle>Index</PageTitle>
-
 <h1>Sharp AES Crypt WASM</h1>
 
 <div class="row">
-    <div class="col-md-4 p-3">
+    <div class="col">
         <RadzenCard>
-            <h4 class="mb-4">Select File</h4>
-
-            @*<input id="SelectedFile" type="file" />
-            <button onclick="PostFile()">submit</button>*@
-            <RadzenFileInput @bind-Value=@fileBase64 TValue="string" Class="w-100" Change=@(args => RadzenFileInputOnChange(args, "FileInput")) Error=@(args => RadzenFileInputOnError(args, "FileInput")) />
-            <h6 class="mb-4">File Name: <b>@(fileName)</b></h6>
+            <h4 class="mb-4">Selected File: @fileName</h4>
+            <InputFile OnChange="HandleFileSelected" />
         </RadzenCard>
     </div>
-    <div class="col-md-4 p-3">
+    <div class="col">
         <RadzenCard>
-            <h4 class="mb-4">Encryption selection</h4>
+            <h4 class="mb-4">Encryption Mode</h4>
             <RadzenSelectBar @bind-Value=@fileEncrypted TValue="bool">
                 <Items>
                     <RadzenSelectBarItem Text="Encrypted" Value="true" />
@@ -37,13 +33,13 @@
     </div>
 </div>
 <div class="row">
-    <div class="col-md-4 p-3">
+    <div class="col">
         <RadzenCard>
             <h4 class="mb-4">Password</h4>
             <RadzenPassword Change=@(args => PasswordOnChange(args, "Password")) Class="w-100" />
         </RadzenCard>
     </div>
-    <div class="col-md-4 p-3">
+    <div class="col">
         <RadzenCard>
             <h4 class="mb-4">Download File</h4>
             <RadzenButton Click=@(args => DownloadFileFromStream()) Text="Download" ButtonStyle="ButtonStyle.Primary" />
@@ -52,12 +48,11 @@
 </div>
 
 @code{
-    private string? fileName { get{ return "NewTextDocumentCopy.txt"; }  }
-    private long? fileSize { get; set; }
-    private byte[]? fileByte { get; set; }
-    private string? fileBase64 { get; set; }
-    private string? secretKey { get; set; }
-    private string? secretExtension { get { return ".aes"; }}
+    private IFileListEntry file { get; set; }
+    private string fileName { get; set; }
+    private string fileBase64 { get; set; }
+    private string secretKey { get; set; }
+    private string secretExtension { get { return ".aes"; }}
     private bool fileEncrypted { get; set; }
     private MemoryStream inputStream = new MemoryStream();
     private MemoryStream outputStream = new MemoryStream();
@@ -72,19 +67,14 @@
         ShowNotification(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Error Summary", Detail = args.Message, Duration = 4000 });
     }
 
-    private void RadzenFileInputOnChange(string value, string name)
+    private async Task HandleFileSelected(IFileListEntry[] files)
     {
-        if (!String.IsNullOrEmpty(value))
-        {
-            string[] result = value.Split(",");
-            fileBase64 = result[1];
-        }
-        else
-        {
-            fileBase64 = value;
-        }
+        file = files.FirstOrDefault();
+        fileName = file.Name;
 
-        this.StateHasChanged();
+        MemoryStream memoryStream = new MemoryStream();
+        await file.Data.CopyToAsync(memoryStream);
+        fileBase64 = Convert.ToBase64String(memoryStream.ToArray());
     }
 
     private void PasswordOnChange(string value, string name)
@@ -119,7 +109,7 @@
         if (!String.IsNullOrEmpty(fileName))
         {
             string getFileName = string.Empty;
-            if(fileName == (fileName + secretExtension))
+            if(fileName.Contains(secretExtension))
             {
                 getFileName = fileName.Replace(secretExtension, string.Empty);
             }
@@ -133,16 +123,4 @@
             await JSRuntime.InvokeVoidAsync("downloadFileFromBase64", getFileName, Convert.ToBase64String(fileStream.ToArray()));
         }
     }
-
-    public class UploadFile
-    {
-        public IFormFile FormFile { get; set; }
-    }
-
-    //[Microsoft.AspNetCore.Mvc.HttpPost]
-    //[Route("/upload/file")]
-    //public Microsoft.AspNetCore.Mvc.JsonResult Update_Data(UploadFile uploadFile)
-    //{
-    //    return new Microsoft.AspNetCore.Mvc.JsonResult("s");
-    //}
 }
